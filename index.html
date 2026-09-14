@@ -1,21 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Liala Layther - Emerging Media</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liala Layther</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400&family=Space+Mono&display=swap');
+
+  :root {
+    --paper: #ece8e1;
+    --ink: #1c1a17;
+    --line: #1c1a17;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper) url('plastic-bg.png') center / cover no-repeat fixed;
+    color: var(--ink);
+    font-family: 'Newsreader', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8vh 6vw;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0 0 0.4rem 0;
+  }
+
+  .subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin: 0 0 3rem 0;
+  }
+
+  .fish-frame {
+    width: min(360px, 70vw);
+    border: 1px solid var(--line);
+    padding: 6px;
+    margin-bottom: 3rem;
+    background: #fff;
+  }
+
+  .fish-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  nav {
+    display: flex;
+    gap: 2.5rem;
+  }
+
+  nav a {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 2px;
+    transition: border-color 0.15s ease;
+  }
+
+  nav a:hover {
+    border-bottom-color: var(--ink);
+  }
+</style>
 </head>
-<body style="max-width: 600px; margin: 60px auto; font-family: Georgia, serif; padding: 0 20px;">
+<body>
 
-  <h1>LIALA LAYTHER</h1>
-  <p>Emerging Media, Fall 2026</p>
+  <h1>Liala Layther</h1>
+  <p class="subtitle">EMERGING MEDIA &mdash; FALL 2026</p>
 
-  <img src="laser_fish.gif" width="300" style="border-radius: 8px; margin-bottom: 30px;">
+  <div class="fish-frame">
+    <img src="laser_fish.gif" alt="A fish chasing a laser pointer">
+  </div>
 
-  <h2>REFLECTIONS</h2>
-
-  <img src="reflection.jpg" width="300">
-
-  <p style="margin-top: 20px;"><a href="https://docs.google.com/document/d/1NmRXAr8CgQMP2N-AHHT4qxQPEMN-4PxlTEIkhktRc0E/edit?usp=sharing" style="color: #4a2b8f; text-decoration: none; border-bottom: 1px solid #4a2b8f;">IN DEFENSE OF THE POOR IMAGE</a></p>
-  <p style="margin-top: 20px;"><a href="https://docs.google.com/document/d/1eyDESMaUfom2JOsOaaiUFN6PCTrVkqtqgDPKtXHTyDA/edit?usp=sharing" style="color: #4a2b8f; text-decoration: none; border-bottom: 1px solid #4a2b8f;">INCANTATIONS</a></p>
+  <nav>
+    <a href="./blog/">Blog</a>
+    <a href="./incantations/">Incantations</a>
+  </nav>
 
 </body>
 </html>
