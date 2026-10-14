@@ -3,172 +3,79 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Incantations — Liala Layther</title>
+<title>Incantations</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Space+Mono:wght@400;700&display=swap');
-
-  :root {
-    --bg: #0e0d0c;
-    --fg: #dedad2;
-    --muted: #7d786d;
-    --mark: #ff5a33;
-    --rule: #2a2926;
-  }
-
-  * { box-sizing: border-box; }
-  html { background: var(--bg); }
-
   body {
+    background-color: #111;
+    color: #ddd;
+    font-family: Georgia, serif;
+    line-height: 1.6;
     margin: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: 'Newsreader', serif;
-    line-height: 1.7;
-    padding: 0 6vw 14vh;
+    padding: 30px;
   }
 
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 2rem 0 1.5rem;
-    background: linear-gradient(var(--bg) 70%, transparent);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.06em;
-    color: var(--muted);
+  a {
+    color: #ddd;
   }
-
-  header a { color: var(--muted); text-decoration: none; }
-  header a:hover { color: var(--fg); }
 
   h1 {
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    font-weight: 500;
-    margin: 4vh 0 3rem;
+    font-weight: normal;
   }
 
-  .grid {
+  .photos {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
+    gap: 5px;
   }
 
-  .sq {
-    display: block;
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
-    background: var(--rule);
-  }
-
-  .sq img {
+  .photos img {
     width: 100%;
-    height: 100%;
+    aspect-ratio: 1 / 1;
     object-fit: cover;
-    display: block;
   }
 
-  .sq:hover img { opacity: 0.8; }
-
-  @media (max-width: 640px) {
-    .grid { grid-template-columns: repeat(3, 1fr); }
+  .text {
+    max-width: 600px;
   }
-
-  section.text {
-    max-width: 58ch;
-    margin: 6rem 0 0;
-  }
-
-  section.text h2 {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    font-weight: 400;
-    letter-spacing: 0.06em;
-    color: var(--mark);
-    margin: 0 0 1rem;
-  }
-
-  section.text p { margin: 0 0 1.3rem; font-size: 1.05rem; }
-  section.text + section.text { margin-top: 4rem; }
-
-  #lightbox {
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    background: rgba(14,13,12,0.96);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    cursor: zoom-out;
-  }
-  #lightbox.open { display: flex; }
-  #lightbox img { max-width: 94vw; max-height: 94vh; }
-
-  ::selection { background: var(--mark); color: var(--bg); }
 </style>
 </head>
 <body>
 
-  <header>
-    <a href="../">&larr; home</a>
-    <span>ima 750 &mdash; incantations</span>
-  </header>
+  <p><a href="../">Home</a></p>
 
   <h1>Incantations</h1>
 
-  <div class="grid">
-    <a href="01.jpg" class="sq"><img src="01.jpg" alt="Incantations, photograph 1" loading="lazy"></a>
-    <a href="02.jpg" class="sq"><img src="02.jpg" alt="Incantations, photograph 2" loading="lazy"></a>
-    <a href="03.jpg" class="sq"><img src="03.jpg" alt="Incantations, photograph 3" loading="lazy"></a>
-    <a href="04.jpg" class="sq"><img src="04.jpg" alt="Incantations, photograph 4" loading="lazy"></a>
-    <a href="05.jpg" class="sq"><img src="05.jpg" alt="Incantations, photograph 5" loading="lazy"></a>
-    <a href="06.jpg" class="sq"><img src="06.jpg" alt="Incantations, photograph 6" loading="lazy"></a>
-    <a href="07.jpg" class="sq"><img src="07.jpg" alt="Incantations, photograph 7" loading="lazy"></a>
-    <a href="08.jpg" class="sq"><img src="08.jpg" alt="Incantations, photograph 8" loading="lazy"></a>
-    <a href="09.jpg" class="sq"><img src="09.jpg" alt="Incantations, photograph 9" loading="lazy"></a>
-    <a href="10.jpg" class="sq"><img src="10.jpg" alt="Incantations, photograph 10" loading="lazy"></a>
-    <a href="11.jpg" class="sq"><img src="11.jpg" alt="Incantations, photograph 11" loading="lazy"></a>
-    <a href="12.jpg" class="sq"><img src="12.jpg" alt="Incantations, photograph 12" loading="lazy"></a>
-    <a href="13.jpg" class="sq"><img src="13.jpg" alt="Incantations, photograph 13" loading="lazy"></a>
-    <a href="14.jpg" class="sq"><img src="14.jpg" alt="Incantations, photograph 14" loading="lazy"></a>
-    <a href="15.jpg" class="sq"><img src="15.jpg" alt="Incantations, photograph 15" loading="lazy"></a>
+  <div class="photos">
+    <img src="01.jpg" alt="Photograph 1">
+    <img src="02.jpg" alt="Photograph 2">
+    <img src="03.jpg" alt="Photograph 3">
+    <img src="04.jpg" alt="Photograph 4">
+    <img src="05.jpg" alt="Photograph 5">
+    <img src="06.jpg" alt="Photograph 6">
+    <img src="07.jpg" alt="Photograph 7">
+    <img src="08.jpg" alt="Photograph 8">
+    <img src="09.jpg" alt="Photograph 9">
+    <img src="10.jpg" alt="Photograph 10">
+    <img src="11.jpg" alt="Photograph 11">
+    <img src="12.jpg" alt="Photograph 12">
+    <img src="13.jpg" alt="Photograph 13">
+    <img src="14.jpg" alt="Photograph 14">
+    <img src="15.jpg" alt="Photograph 15">
   </div>
 
-  <!--
-  <section class="text">
-    <h2>abstract</h2>
-    <p>...</p>
-  </section>
-  <section class="text">
-    <h2>theory</h2>
-    <p>...</p>
-  </section>
-  <section class="text">
-    <h2>bio</h2>
-    <p>...</p>
-  </section>
-  -->
+  <div class="text">
 
-  <div id="lightbox"><img alt=""></div>
+    <h2>Project Abstract</h2>
+    <p>Object Permanence is about why we keep what we keep, and what happens to our things once the person they mattered to is gone. It begins in the apartment of a 93 year old, Linda Asher, exploring her relationship to her many objects. Linda died halfway through the project. I examine what, then, to make of her objects? Can a person be revealed through the things they lived with, after they&rsquo;re gone?</p>
 
-<script>
-  var lb = document.getElementById('lightbox');
-  var lbImg = lb.querySelector('img');
-  document.querySelectorAll('.sq').forEach(function (a) {
-    a.addEventListener('click', function (e) {
-      e.preventDefault();
-      lbImg.src = a.getAttribute('href');
-      lb.classList.add('open');
-    });
-  });
-  lb.addEventListener('click', function () { lb.classList.remove('open'); });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') lb.classList.remove('open');
-  });
-</script>
+    <h2>Project Description</h2>
+    <p>Linda raised her kids in this apartment, hosted her sister's wedding here, and died here, in the same place her husband did. Because rent control meant she was never at risk of being priced out, she got to do something most New Yorkers can't: stay. She saved, built, repaired, arranged, imagined, and collected. Everything she owned had a winding story, and entering her space felt like entering a world she had dreamed up.</p>
+    <p>Rent control isn't the subject of this project so much as the condition that made it possible. Not worrying about the next lease or the next rent check is what lets one person turn an apartment into a self. This project looks at what that produces, alongside what happens when you leave.</p>
+
+    <h2>Bio</h2>
+    <p>Liala Layther is a New York-based film editor and MFA student in Integrated Media Arts at Hunter College. Her editing credits include documentary work for HBO, Al Jazeera, and ABC.</p>
+
+  </div>
 
 </body>
 </html>
