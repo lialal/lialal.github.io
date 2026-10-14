@@ -1,1 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Incantations — Liala Layther</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Space+Mono:wght@400;700&display=swap');
 
+  :root {
+    --bg: #0e0d0c;
+    --fg: #dedad2;
+    --muted: #7d786d;
+    --mark: #ff5a33;
+    --rule: #2a2926;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Newsreader', serif;
+    line-height: 1.7;
+    padding: 0 6vw 14vh;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 2rem 0 1.5rem;
+    background: linear-gradient(var(--bg) 70%, transparent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  header a { color: var(--muted); text-decoration: none; }
+  header a:hover { color: var(--fg); }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 500;
+    margin: 4vh 0 3rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+
+  .sq {
+    display: block;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--rule);
+  }
+
+  .sq img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .sq:hover img { opacity: 0.8; }
+
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  section.text {
+    max-width: 58ch;
+    margin: 6rem 0 0;
+  }
+
+  section.text h2 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--mark);
+    margin: 0 0 1rem;
+  }
+
+  section.text p { margin: 0 0 1.3rem; font-size: 1.05rem; }
+  section.text + section.text { margin-top: 4rem; }
+
+  #lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: rgba(14,13,12,0.96);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img { max-width: 94vw; max-height: 94vh; }
+
+  ::selection { background: var(--mark); color: var(--bg); }
+</style>
+</head>
+<body>
+
+  <header>
+    <a href="../">&larr; home</a>
+    <span>ima 750 &mdash; incantations</span>
+  </header>
+
+  <h1>Incantations</h1>
+
+  <div class="grid">
+    <a href="01.jpg" class="sq"><img src="01.jpg" alt="Incantations, photograph 1" loading="lazy"></a>
+    <a href="02.jpg" class="sq"><img src="02.jpg" alt="Incantations, photograph 2" loading="lazy"></a>
+    <a href="03.jpg" class="sq"><img src="03.jpg" alt="Incantations, photograph 3" loading="lazy"></a>
+    <a href="04.jpg" class="sq"><img src="04.jpg" alt="Incantations, photograph 4" loading="lazy"></a>
+    <a href="05.jpg" class="sq"><img src="05.jpg" alt="Incantations, photograph 5" loading="lazy"></a>
+    <a href="06.jpg" class="sq"><img src="06.jpg" alt="Incantations, photograph 6" loading="lazy"></a>
+    <a href="07.jpg" class="sq"><img src="07.jpg" alt="Incantations, photograph 7" loading="lazy"></a>
+    <a href="08.jpg" class="sq"><img src="08.jpg" alt="Incantations, photograph 8" loading="lazy"></a>
+    <a href="09.jpg" class="sq"><img src="09.jpg" alt="Incantations, photograph 9" loading="lazy"></a>
+    <a href="10.jpg" class="sq"><img src="10.jpg" alt="Incantations, photograph 10" loading="lazy"></a>
+    <a href="11.jpg" class="sq"><img src="11.jpg" alt="Incantations, photograph 11" loading="lazy"></a>
+    <a href="12.jpg" class="sq"><img src="12.jpg" alt="Incantations, photograph 12" loading="lazy"></a>
+    <a href="13.jpg" class="sq"><img src="13.jpg" alt="Incantations, photograph 13" loading="lazy"></a>
+    <a href="14.jpg" class="sq"><img src="14.jpg" alt="Incantations, photograph 14" loading="lazy"></a>
+    <a href="15.jpg" class="sq"><img src="15.jpg" alt="Incantations, photograph 15" loading="lazy"></a>
+  </div>
+
+  <!--
+  <section class="text">
+    <h2>abstract</h2>
+    <p>...</p>
+  </section>
+  <section class="text">
+    <h2>theory</h2>
+    <p>...</p>
+  </section>
+  <section class="text">
+    <h2>bio</h2>
+    <p>...</p>
+  </section>
+  -->
+
+  <div id="lightbox"><img alt=""></div>
+
+<script>
+  var lb = document.getElementById('lightbox');
+  var lbImg = lb.querySelector('img');
+  document.querySelectorAll('.sq').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      lbImg.src = a.getAttribute('href');
+      lb.classList.add('open');
+    });
+  });
+  lb.addEventListener('click', function () { lb.classList.remove('open'); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') lb.classList.remove('open');
+  });
+</script>
+
+</body>
+</html>
