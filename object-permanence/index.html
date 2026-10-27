@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Object Permanence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  :root { --serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; --ink: #e9e6df; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #000; }
+  body { background: #000; color: var(--ink); font-family: var(--serif); overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+  body.locked { overflow: hidden; height: 100vh; }
+
+  /* ---------- the pinned picture ---------- */
+  #stage { position: fixed; inset: 0; background: #000; z-index: 0; }
+  .ph, .mv { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; opacity: 0; }
+  .ph { transition: opacity 1400ms ease; }
+  .mv { transition: none; }
+
+  /* ---------- the story that scrolls over it ---------- */
+  #story { position: relative; z-index: 5; pointer-events: none; }
+  .chap { position: relative; }
+  .card { position: absolute; left: 50%; top: var(--y, 50%); transform: translate(-50%, -50%);
+          width: clamp(290px, 28vw, 560px); max-width: calc(100vw - 40px);
+          background: rgba(238,238,235,.92); color: #151515; padding: 1.05em 1.25em 1.1em;
+          font-size: clamp(17px, 1.3vw, 22px); line-height: 1.38; font-weight: 400; letter-spacing: .002em; }
+  .card.bare { background: none; color: #ece9e2; text-align: center; width: min(92vw, 34em);
+               font-size: clamp(22px, 2.7vw, 40px); font-style: italic; line-height: 1.3; text-shadow: 0 0 18px #000; }
+  .replay { position: absolute; left: 0; right: 0; bottom: 12vh; text-align: center; pointer-events: auto; }
+  .replay a { color: rgba(233,230,223,.5); font-size: 13px; letter-spacing: .26em; text-transform: uppercase; text-decoration: none; padding: 12px; cursor: pointer; font-family: var(--serif); }
+  .replay a:hover { color: rgba(233,230,223,.95); }
+
+  /* ---------- gate ---------- */
+  #gate { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+          gap: 18px; text-align: center; padding: 24px; transition: opacity 1400ms ease; z-index: 20; cursor: default; }
+  #gate h1 { font-weight: 400; font-size: clamp(18px, 3.2vw, 30px); letter-spacing: .34em; text-transform: uppercase; padding-left: .34em;
+             opacity: .38; transition: opacity 1600ms ease; }
+  #gate p { font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: rgba(233,230,223,.7); }
+  #gate p:empty { display: none; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #gate.ready { cursor: pointer; } #gate.ready h1 { opacity: 1; }
+  #gate.go { opacity: 0; pointer-events: none; }
+
+  /* ---------- small controls ---------- */
+  #mute { position: fixed; top: max(14px, env(safe-area-inset-top)); right: 16px; z-index: 10; background: rgba(0,0,0,.25); border: 0;
+          color: rgba(233,230,223,.7); font: inherit; font-size: 12px; letter-spacing: .2em; text-transform: uppercase;
+          padding: 8px 10px; cursor: pointer; opacity: 0; transition: opacity 1200ms ease; }
+  #mute.show { opacity: 1; } #mute:hover, #mute:focus-visible { color: #fff; }
+  #hint { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 9; opacity: 0; pointer-events: none; transition: opacity 900ms ease; }
+  #hint.show { opacity: .85; animation: bob 2.2s ease-in-out infinite; }
+  #hint svg { display: block; width: 26px; height: 26px; stroke: #fff; filter: drop-shadow(0 0 6px #000); }
+  @keyframes bob { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 7px); } }
+
+  /* ---------- mixer (press M) ---------- */
+  #mix { position: fixed; right: 12px; bottom: 12px; width: min(340px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto;
+         background: rgba(12,12,12,.95); border: 1px solid #333; border-radius: 6px; padding: 12px 14px; z-index: 30; display: none;
+         font: 12px/1.3 system-ui, sans-serif; color: #ddd; cursor: default; }
+  #mix.open { display: block; }
+  #mix h2 { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; color: #fff; }
+  #mix .row { display: grid; grid-template-columns: 78px 1fr 46px; align-items: center; gap: 8px; margin: 5px 0; }
+  #mix input[type=range] { width: 100%; }
+  #mix .db { text-align: right; font-variant-numeric: tabular-nums; color: #aaa; }
+  #mix select, #mix button { font: inherit; background: #222; color: #ddd; border: 1px solid #444; border-radius: 4px; padding: 5px 8px; cursor: pointer; }
+  #mix .bar { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  #mix small { display: block; color: #888; margin-top: 8px; }
+  #mix hr { border: 0; border-top: 1px solid #333; margin: 10px 0; }
+</style>
+</head>
+<body class="locked">
+
+<div id="stage" role="img" aria-label="Object Permanence">
+  <img class="ph" id="p0" alt="" decoding="async">
+  <img class="ph" id="p1" alt="" decoding="async">
+</div>
+<main id="story"></main>
+
+<button id="mute" type="button">Sound on</button>
+<div id="hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg></div>
+
+<div id="gate">
+  <h1>Object Permanence</h1>
+  <p id="gateMsg"></p>
+  <span class="sr">Click or press Enter to begin. Headphones recommended.</span>
+</div>
+<div id="mix" aria-label="Mixer"></div>
+<noscript><p style="position:fixed;inset:0;display:grid;place-items:center;color:#aaa;background:#000;z-index:99">This piece needs JavaScript and sound.</p></noscript>
+
+<script>
+"use strict";
+/* ====================================================================
+   OBJECT PERMANENCE — Liala Layther
+   Everything you are likely to edit is in the tables below.
+   ==================================================================== */
+
+/* ---- 1. SOUNDS ------------------------------------------------------
+   kind "bed"   = continuous; switched on and off by the sequence
+   kind "layer" = an apartment sound. Arrives with its photo, then sinks a notch each
+                  time something newer arrives, but never disappears until the market cut.
+   kind "once"  = plays one time
+   how  "stream" = long files, played straight from the file     how "buffer" = short files, held in memory
+   trim = level in dB on top of your file. 0 = exactly as you made it. (Press M on the page to tune by ear.) */
+const SOUNDS = {
+  room:   { src: "audio/room_tone.mp3",             kind: "bed",   how: "stream", trim:  0 },
+  street: { src: "audio/street_through_window.mp3", kind: "bed",   how: "stream", trim: -8 },
+  market: { src: "audio/flea_market.mp3",           kind: "bed",   how: "stream", trim:  0 },
+  door:   { src: "audio/door_opening.mp3",          kind: "once",  how: "buffer", trim:  0 },
+  dishes: { src: "audio/setting_down_dishes.mp3",   kind: "layer", how: "buffer", trim:  0 },
+  fabric: { src: "audio/fabric_moving.mp3",         kind: "layer", how: "buffer", trim:  0 },
+  bulbs:  { src: "audio/glass_bulbs.mp3",           kind: "layer", how: "buffer", trim:  0 },
+  hangers:{ src: "audio/hangers.mp3",               kind: "layer", how: "buffer", trim:  0 },
+  pages:  { src: "audio/book_flipping.mp3",         kind: "layer", how: "stream", trim:  0 },
+  tap:    { src: "audio/tap_on.mp3",                kind: "layer", how: "buffer", trim:  0 },
+  voice:  { src: "audio/linda_voice.mp3",           kind: "once",  how: "buffer", trim:  0 }
+};
+const LABELS = { room:"Room tone", street:"Street", market:"Market", door:"Door", dishes:"Dishes", fabric:"Fabric",
+                 bulbs:"Bulbs", hangers:"Hangers", pages:"Pages", tap:"Tap", voice:"Linda" };
+const SINK = [0, -5, -9, -13, -17];     // how far each apartment sound sinks as newer ones arrive; the last number is its floor
+/* DOOR_DELAY: seconds after the film starts moving before the door sound begins. Raise it if the creak still comes before
+   the door opens, lower it if it comes late. Try it without editing: add  ?door=1.5  to the web address. */
+const DOOR_DELAY = (v => isFinite(v) ? v : 1.0)(parseFloat(new URLSearchParams(location.search).get("door")));
+const DUCK_DB = -10;                     // while Linda speaks, every other sound drops this far, then comes back when she stops
+
+/* ---- 2. THE FILMS ---------------------------------------------------
+   A film can be listed in more than one format; the first one the browser can play is used. */
+const VIDEOS = {
+  door:    { src: ["video/door.mp4", "video/door.webm"],              loop: false, label: "A hand turns a door handle and the door opens into the dark." },
+  market:  { src: ["video/flea_market.mp4", "video/flea_market.webm"], loop: false, restart: true, blackOnEnd: true, label: "Old film footage of a flea market." },
+};
+
+/* ---- 3. THE STORY ---------------------------------------------------
+   One entry = one chapter. The picture is pinned; the text scrolls up over it.
+   img / video   the picture for this chapter (img can be a list: the first one that exists is used)
+   text          the card(s) of text. A list = several cards in the same chapter.
+   add           the sound that arrives with this chapter     once   a sound played one time on arrival
+   market        the hard cut: every apartment sound stops and the market starts
+   marketOut     the market sound fades out here              end    the final black
+   h             how long the chapter is, in screen heights (optional)                                     */
+const STEPS = [
+  { gate: true },
+  { video: "door",  text: "I never understood why people kept so much.", y: "40%", h: 135, once: "door", onceDelay: DOOR_DELAY },
+  { img: "photos/hall.jpg",       alt: "A white hallway. Through an open door, a crowded back room and pinned photographs." },
+  { img: "photos/wide_room.jpg",  alt: "A wide living room with an arched doorway, a green rug, a child’s tricycle and a wheelchair in the back.", text: "Then I lived with Linda." },
+  { img: "photos/dolls.jpg",      alt: "Dolls and figurines gathered on a loveseat in window light.", text: "She was ninety-three." },
+  { img: "photos/soldiers.jpg",   alt: "Painted toy soldiers on a shelf in front of a row of classical CDs, several fallen over." },
+  { img: "photos/books_dolls.jpg",alt: "Two dolls standing and a third lying down on a shelf of books.", text: "Her apartment was full of things." },
+  { img: "photos/kitchen.jpg",    alt: "A green kitchen wall hung with pans above a white stove.", text: "Things she had saved." },
+  { img: "photos/table_pots.jpg", alt: "A wooden table crowded with painted pots, a parchment lamp, bowls of marbles and shells, and a blue candelabra with a bird on it." },
+  { img: "photos/window.jpg",     alt: "A tall window with sheer curtains, a sofa, a rocking chair and a green rug.", text: "Repaired.", add: "street" },
+  { img: "photos/cabinet.jpg",    alt: "A yellow cabinet of stacked blue and white dishes.", text: "Arranged.", add: "dishes" },
+  { img: "photos/kimono.jpg",     alt: "A patterned maroon robe laid out, a hand resting on it.", text: "A world she had made.", add: "fabric" },
+  { img: "photos/bulbs.jpg",      alt: "A file cabinet with a drawer of papers open and a basket of light bulbs on top.", text: "Some things seemed ordinary to me.", add: "bulbs" },
+  { img: "photos/closet.jpg",     alt: "A closet crowded with hanging clothes and bags.", text: "But she had a story for every object.", add: "hangers" },
+  { img: "photos/beads.jpg",      alt: "A white drawer tangled with necklaces: red coral, brass lattice beads, wooden beads." },
+  { img: "photos/hats.jpg",       alt: "A blue-grey door and a small round table piled with hats and scarves.", text: "Then she died." },
+  { img: "photos/storage.jpg",    alt: "A narrow storage closet with shelves of boxes.", text: "But I was still there, surrounded by her things." },
+  { img: "photos/books.jpg",      alt: "A wall of bookshelves, a dark room behind it.", text: "And the world she had made felt louder than ever.", add: "pages" },
+  { img: "photos/bathroom.jpg",   alt: "A white bathroom sink under a mirror, crowded with bottles.", text: "I could almost hear her.", add: "tap" },
+
+  /* ---- Linda's voice. No text: the picture holds while she speaks, and the other sounds sit down under her. ---- */
+  { img: "photos/mantel.jpg",     alt: "A mantel with framed bird prints, a pop-up card, a small red dress, a velvet pouch and a wooden stamp.", once: "voice", onceDelay: 1.2, h: 230 },
+
+  { img: "photos/vhs_rug.jpg",    alt: "Stacks of VHS tapes on a green rug in front of a green sofa, a wheelchair and a tricycle behind.",
+    text: ["Was she afraid that if she got rid of anything, her stories would disappear with it?", "Now I have the same fear."] },
+  { img: "photos/bike_hall.jpg",  alt: "A yellow hallway with a bicycle standing by a door.",
+    text: ["I started to wonder what I would forget.", "And whether keeping her things would help me remember."] },
+
+  /* ---- the hard cut: every apartment sound stops, the market starts ---- */
+  { img: "photos/market_1.jpg", alt: "A man in a hat browsing a market table of brass figures.", text: "Here were other people’s things.", fade: 0, market: true },
+  { img: "photos/market_2.jpg", alt: "A market table of cut-glass decanters and silver trays.", text: "I wondered who had kept them.", fade: 0 },
+  { img: "photos/market_3.jpg", alt: "A glass display case of small jewellery at a flea market.", text: "And what I couldn’t know just by looking.", fade: 0 },
+  /* the film plays once (60 s), then cuts to black. h = how long the chapter lasts while it plays */
+  { video: "market", h: 260 },
+
+  /* ---- the return ---- */
+  { img: "photos/portrait.jpg", alt: "A feather picture of a bird in a carved wooden frame, beside an old portrait of a child in a carved chair.", marketOut: true, fade: 2600, h: 200,
+    text: "If the physical world you build gets dismantled, what happens to the memory of you tied to it?" },
+  { end: true, text: "Can a story stay with an object, even when no one is left who knows it?", bare: true, h: 170 }
+];
+
+/* ---- 4. ENDING ------------------------------------------------------
+   Default: the street fades out over black.  Add  ?ending=room  to the web address to hear the other one:
+   the room tone comes back over black.                                                                  */
+const ENDING = new URLSearchParams(location.search).get("ending") === "room" ? "room" : "street";
+
+/* ==================================================================== */
+const $ = s => document.querySelector(s);
+const db2g = d => Math.pow(10, d / 20);
+const IDX = {
+  market: STEPS.findIndex(s => s.market),
+  out:    STEPS.findIndex(s => s.marketOut),
+  end:    STEPS.findIndex(s => s.end),
+  street: STEPS.findIndex(s => s.add === "street")
+};
+
+/* ---------- audio engine ---------- */
+let ctx, master, comp, analyser, muted = false, ready = false, started = false, cutDone = false;
+const bus = {}, snd = {}, lastTarget = {};
+const trimDB = { master: 0 };
+for (const k in SOUNDS) trimDB[k] = SOUNDS[k].trim;
+try { Object.assign(trimDB, JSON.parse(localStorage.getItem("op_mix") || "{}")); } catch (e) {}
+
+const N = 96, CIN = new Float32Array(N), COUT = new Float32Array(N);       // equal-power crossfade curves
+for (let i = 0; i < N; i++) { const x = i / (N - 1) * Math.PI / 2; CIN[i] = Math.sin(x); COUT[i] = Math.cos(x); }
+
+function applyMaster() {
+  if (!master) return;
+  master.gain.setTargetAtTime(muted ? 0 : 0.9 * db2g(trimDB.master || 0), ctx.currentTime, 0.08);
+}
+function audioSetup() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return false;
+  ctx = new AC();
+  master = ctx.createGain(); master.gain.value = 0.9 * db2g(trimDB.master || 0);
+  comp = ctx.createDynamicsCompressor();                       // safety limiter only: stacked layers can't clip
+  comp.threshold.value = -3; comp.knee.value = 0; comp.ratio.value = 20; comp.attack.value = 0.003; comp.release.value = 0.25;
+  analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
+  master.connect(comp); comp.connect(ctx.destination); comp.connect(analyser);
+  for (const k in SOUNDS) {
+    const level = ctx.createGain(); level.gain.value = 0;
+    const trim = ctx.createGain(); trim.gain.value = db2g(trimDB[k]);
+    const duck = ctx.createGain(); duck.gain.value = 1;              // dips every other sound while Linda speaks
+    level.connect(trim); trim.connect(duck); duck.connect(master);
+    bus[k] = { level, trim, duck };
+  }
+  return true;
+}
+function decode(ab) {
+  return new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); });
+}
+
+/* a loop made of overlapping copies, so the join never clicks */
+function startBufferLoop(buf, dest, xf) {
+  const dur = buf.duration; xf = Math.min(xf, dur / 4);
+  let t = ctx.currentTime + 0.03, first = true;
+  function schedule() {
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const g = ctx.createGain(); src.connect(g); g.connect(dest);
+    const fi = first ? 0.02 : xf; first = false;
+    g.gain.setValueAtTime(0, t);
+    g.gain.setValueCurveAtTime(CIN, t, fi);
+    g.gain.setValueCurveAtTime(COUT, t + dur - xf, xf);
+    src.start(t); src.stop(t + dur + 0.05);
+    t += dur - xf;
+  }
+  const pump = () => { while (t - ctx.currentTime < 3) schedule(); };
+  pump(); const timer = setInterval(pump, 500);
+  return () => clearInterval(timer);
+}
+
+/* long files are played straight from the file; two copies hand over to each other at the end */
+function makeStream(src, dest, xf) {
+  const mk = now => {
+    const a = new Audio(); a.preload = now ? "auto" : "none"; a.playsInline = true; if (now) a.src = src;
+    const s = ctx.createMediaElementSource(a), g = ctx.createGain(); g.gain.value = 0;
+    s.connect(g); g.connect(dest); return { a, g, primed: !!now };
+  };
+  let A = mk(true), B = mk(false), running = false, handing = false, timer = null;
+  A.g.gain.value = 1;
+  const prime = e => { if (!e.primed) { e.a.src = src; e.a.preload = "auto"; e.a.load(); e.primed = true; } };
+  function handoff(len) {
+    if (handing) return; handing = true; prime(B);
+    const t = ctx.currentTime, n = B, o = A;
+    try { n.a.currentTime = 0; } catch (e) {}
+    const p = n.a.play(); if (p && p.catch) p.catch(() => {});
+    n.g.gain.setValueCurveAtTime(CIN, t, len); o.g.gain.setValueCurveAtTime(COUT, t, len);
+    setTimeout(() => { o.a.pause(); try { o.a.currentTime = 0; } catch (e) {} A = n; B = o; handing = false; }, len * 1000 + 150);
+  }
+  function tick() {
+    if (!running || handing) return;
+    const d = A.a.duration; if (!isFinite(d) || d <= 0) return;
+    const rem = d - A.a.currentTime;
+    if (rem < 30) prime(B);
+    if (rem <= Math.min(xf, d / 4) + 0.3) handoff(Math.min(xf, d / 4));
+  }
+  [A, B].forEach(e => e.a.addEventListener("ended", () => { if (running && !handing && e === A) handoff(0.05); }));
+  const play = () => { try { A.a.currentTime = 0; } catch (e) {} const p = A.a.play(); if (p && p.catch) p.catch(() => {}); running = true; timer = timer || setInterval(tick, 200); };
+  return { start: play, unlock() { const p = A.a.play(); A.a.pause(); if (p && p.catch) p.catch(() => {}); } };
+}
+
+async function loadSounds() {
+  await Promise.all(Object.keys(SOUNDS).map(async k => {
+    const d = SOUNDS[k]; const s = snd[k] = { started: false };
+    try {
+      if (d.how === "buffer") {
+        const r = await fetch(d.src); if (!r.ok) throw new Error(r.status);
+        s.buf = await decode(await r.arrayBuffer());
+      } else {
+        s.stream = makeStream(d.src, bus[k].level, 2.5);
+      }
+    } catch (e) { console.warn("sound missing, skipped:", d.src, e); s.missing = true; }
+  }));
+}
+function ensureStarted(k) {
+  const s = snd[k]; if (!s || s.started || s.missing) return;
+  s.started = true;
+  if (s.stream) s.stream.start(); else if (s.buf) startBufferLoop(s.buf, bus[k].level, 0.25);
+}
+const onceState = {};
+function duckOthers(on, when, tc) {
+  const t = Math.max(ctx.currentTime, when || 0);
+  for (const k in bus) if (k !== "voice" && k !== "door") bus[k].duck.gain.setTargetAtTime(on ? db2g(DUCK_DB) : 1, t, tc || (on ? 0.35 : 1.0));
+}
+function playOnce(k, delay) {
+  const s = snd[k]; if (!s || !s.buf) return;
+  const st = onceState[k] || (onceState[k] = { n: 0, src: null });
+  if (st.n > 0) return;                                              // already playing: never stack
+  const src = ctx.createBufferSource(); src.buffer = s.buf; src.connect(bus[k].level);
+  const g = bus[k].level.gain, at = ctx.currentTime + 0.02 + (delay || 0);
+  g.cancelScheduledValues(0); g.setValueAtTime(1, ctx.currentTime);
+  st.n++; st.src = src;
+  if (k === "voice") duckOthers(true, at - 0.5);
+  src.onended = () => { st.n = Math.max(0, st.n - 1); if (st.src === src) st.src = null; if (k === "voice") duckOthers(false); };
+  src.start(at);
+}
+function stopOnce(k) {                                               // the hard cut takes the voice with it
+  const st = onceState[k]; if (!st || !st.src) return;
+  const g = bus[k].level.gain, now = ctx.currentTime;
+  g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(0, now + 0.03);
+  try { st.src.stop(now + 0.05); } catch (e) {}
+  if (k === "voice") duckOthers(false, now, 0.01);                   // the market comes in at full strength
+}
+function fireOnce(i) {                                               // starts a sound once its picture is really moving
+  const s = STEPS[i], delay = s.onceDelay || 0, v = s.video ? VIDEOS[s.video].el : null;
+  const run = () => playOnce(s.once, delay);
+  if (!v || v.currentTime > 0.1) return run();
+  let done = false; const go1 = () => { if (!done) { done = true; run(); } };
+  v.addEventListener("playing", go1, { once: true }); setTimeout(go1, 2500);
+}
+
+function setLevel(k, dB, ramp) {
+  if (!bus[k] || lastTarget[k] === dB) return;
+  lastTarget[k] = dB;
+  const p = bus[k].level.gain, now = ctx.currentTime, g = dB === null ? 0 : db2g(dB);
+  if (dB !== null) ensureStarted(k);
+  if (p.cancelAndHoldAtTime) p.cancelAndHoldAtTime(now); else { p.cancelScheduledValues(now); p.setValueAtTime(p.value, now); }
+  if (ramp <= 0.05) { p.linearRampToValueAtTime(g, now + Math.max(ramp, 0.01)); return; }
+  p.setTargetAtTime(g, now, ramp / 3);
+  if (dB === null) p.setValueAtTime(0, now + ramp * 1.8);
+}
+
+/* what should every sound be doing at chapter i? (dB, or null = silent)
+   Once the market has cut the apartment away, it stays gone: scroll back up and you still see the
+   rooms, but they never sound the way they did. Only the street remains. */
+function targets(i) {
+  const t = {};
+  const apt = i >= 1 && i < IDX.market && !cutDone;
+  t.room = apt ? 0 : (ENDING === "room" && i === IDX.end ? 0 : null);
+  const streamOn = cutDone || i >= IDX.street;
+  t.street = !streamOn ? null : (i === IDX.end ? (ENDING === "room" ? -18 : null) : 0);
+  t.market = (i >= IDX.market && i < IDX.out) ? 0 : null;
+  for (const key in SOUNDS) if (SOUNDS[key].kind === "layer") t[key] = null;
+  if (apt) {
+    const arrived = [];
+    STEPS.forEach((s, k) => { if (s.add && SOUNDS[s.add].kind === "layer" && k <= i) arrived.push({ k, key: s.add }); });
+    // newest sound = full level while its picture is up; every newer sound, or the picture moving on, drops older ones a notch
+    const moved = arrived.length && arrived[arrived.length - 1].k < i ? 1 : 0;
+    arrived.forEach((o, n) => { t[o.key] = SINK[Math.min((arrived.length - 1 - n) + moved, SINK.length - 1)]; });
+  }
+  return t;
+}
+function rampFor(k, i, prev) {
+  if (i >= IDX.market && prev < IDX.market) return 0.03;        // the hard cut
+  if (i === IDX.end) return 12;
+  if (i === IDX.out) return k === "market" ? 3 : 2.5;
+  if (k === "room" && prev === 0) return 12;                     // the room comes up slowly
+  if (k === "street" && STEPS[i].add === "street") return 5;
+  return 2.5;
+}
+function applyAudio(i, prev) {
+  if (!ctx) return;
+  const cutting = i >= IDX.market && prev < IDX.market;
+  if (i >= IDX.market) cutDone = true;
+  const t = targets(i);
+  for (const k in SOUNDS) { if (SOUNDS[k].kind === "once") continue; setLevel(k, k in t ? t[k] : null, rampFor(k, i, prev)); }
+  if (cutting) stopOnce("voice");
+  if (STEPS[i].once && i > prev && !cutDone) fireOnce(i);
+}
+
+/* ---------- pictures ---------- */
+const slots = [$("#p0"), $("#p1")], stage = $("#stage");
+let front = 0, cur = 0, token = 0;
+const keep = [], seen = new Map();
+function loadable(src) {
+  if (!seen.has(src)) seen.set(src, new Promise(res => { const im = new Image(); im.onload = () => res(true); im.onerror = () => res(false); im.src = src; keep.push(im); }));
+  return seen.get(src);
+}
+async function firstLoadable(list) {
+  for (const s of [].concat(list)) if (await loadable(s)) return s;
+  console.warn("no image could be loaded from", list); return null;
+}
+function pickVideo(list) {
+  const v = document.createElement("video"), types = { mp4: 'video/mp4; codecs="avc1.42E01E"', webm: 'video/webm; codecs="vp9"' };
+  const l = [].concat(list);
+  return l.find(s => v.canPlayType(types[s.split(".").pop()] || "")) || l[0];
+}
+for (const k in VIDEOS) {
+  const v = document.createElement("video"); v.className = "mv"; v.muted = true; v.playsInline = true; v.preload = "auto"; v.loop = VIDEOS[k].loop;
+  v.setAttribute("aria-label", VIDEOS[k].label); stage.appendChild(v); VIDEOS[k].el = v;
+  if (VIDEOS[k].blackOnEnd) v.addEventListener("ended", () => { v.style.transition = "opacity 700ms ease"; v.style.opacity = 0; });   // done playing: cut to black
+}
+
+async function showStep(i) {
+  const s = STEPS[i], my = ++token, fade = s.fade == null ? 1400 : s.fade;
+  const fadeOut = el => { el.style.transitionDuration = fade + "ms"; el.style.opacity = 0; };
+  for (const k in VIDEOS) {
+    const v = VIDEOS[k].el;
+    if (k !== s.video && v.style.opacity === "1") { v.style.transition = "none"; v.style.opacity = 0; if (VIDEOS[k].loop || VIDEOS[k].restart) v.pause(); }
+  }
+  if (s.video) {
+    slots.forEach(e => { e.style.transitionDuration = "0ms"; e.style.opacity = 0; });
+    const v = VIDEOS[s.video].el;
+    if (!v.getAttribute("src")) v.src = pickVideo(VIDEOS[s.video].src);
+    if (!v.dataset.started) { v.dataset.started = "1"; try { v.currentTime = 0; } catch (e) {} const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+    else if (VIDEOS[s.video].restart) { try { v.currentTime = 0; } catch (e) {} const p = v.play(); if (p && p.catch) p.catch(() => {}); }   // plays again from the start
+    else if (VIDEOS[s.video].loop && v.paused) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+    v.style.transition = "none"; v.style.opacity = 1;
+  } else if (s.img) {
+    const src = await firstLoadable(s.img); if (my !== token) return;
+    const back = slots[1 - front], old = slots[front];
+    if (old.getAttribute("src") === src && old.style.opacity === "1") { old.alt = s.alt || ""; return; }   // same picture: nothing to do
+    back.alt = s.alt || ""; back.src = src;
+    try { await back.decode(); } catch (e) {}
+    if (my !== token) return;
+    back.style.transitionDuration = fade + "ms"; back.style.opacity = 1; fadeOut(old); front = 1 - front;
+  } else { slots.forEach(fadeOut); }
+  STEPS.slice(i + 1, i + 4).forEach(n => { if (n.img) firstLoadable(n.img); });
+}
+
+/* ---------- the scrolling story ---------- */
+const chaps = [];
+(function buildStory() {
+  const story = $("#story");
+  STEPS.forEach((s, i) => {
+    if (s.gate) return;
+    const texts = s.text ? [].concat(s.text) : [];
+    const h = s.h || (texts.length > 1 ? 190 : texts.length ? 120 : s.video ? 120 : 75);
+    const el = document.createElement("section"); el.className = "chap"; el.dataset.i = i; el.style.height = h + "vh";
+    texts.forEach((t, n) => {
+      const c = document.createElement("div"); c.className = "card" + (s.bare ? " bare" : ""); c.textContent = t;
+      const y = s.y || (texts.length === 1 ? "50%" : (n === 0 ? "30%" : "72%")); c.style.setProperty("--y", y);
+      el.appendChild(c);
+    });
+    if (s.end) { const r = document.createElement("div"); r.className = "replay"; r.innerHTML = '<a href="" id="again">Replay</a>'; el.appendChild(r); }
+    story.appendChild(el); chaps.push({ i, el });
+  });
+})();
+
+function go(i) {
+  if (i < 1 || i >= STEPS.length || i === cur) return;
+  const prev = cur; cur = i;
+  showStep(i); applyAudio(i, prev); syncMixer();
+}
+let ticking = false;
+function update() {
+  if (!started) return;
+  const mid = innerHeight * 0.5; let idx = -1;
+  for (const c of chaps) { const r = c.el.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) { idx = c.i; break; } }
+  if (idx < 0) idx = scrollY < 10 ? chaps[0].i : chaps[chaps.length - 1].i;
+  if (idx !== cur) go(idx);
+  if (scrollY > 30) $("#hint").classList.remove("show");
+}
+addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; update(); }); } }, { passive: true });
+addEventListener("resize", update);
+function jumpTo(i) {
+  const c = chaps.find(x => x.i === i); if (!c) return;
+  const top = c.el.offsetTop + c.el.offsetHeight / 2 - innerHeight / 2;
+  window.scrollTo({ top: Math.max(0, top), behavior: "instant" }); update();
+}
+
+/* ---------- gate ---------- */
+async function boot() {
+  try { history.scrollRestoration = "manual"; } catch (e) {} scrollTo(0, 0);
+  const gate = $("#gate"), msg = $("#gateMsg");
+  if (!audioSetup()) { msg.textContent = "This browser can't play the sound"; return; }
+  for (const k in VIDEOS) VIDEOS[k].el.src = pickVideo(VIDEOS[k].src);          // start fetching the films now
+  const firsts = Promise.all([STEPS[2].img, STEPS[3].img, STEPS[4].img].map(firstLoadable));
+  const door = new Promise(r => { const v = VIDEOS.door.el; if (v.readyState >= 3) r(); else { v.addEventListener("canplaythrough", r, { once: true }); v.addEventListener("error", r, { once: true }); } });
+  await Promise.race([Promise.all([loadSounds(), firsts, door]), new Promise(r => setTimeout(r, 14000))]);
+  ready = true; gate.classList.add("ready");
+  buildMixer();
+  const enter = async () => {
+    if (!gate.classList.contains("ready") || gate.classList.contains("go")) return;
+    try { await ctx.resume(); } catch (e) {}
+    for (const k of ["street", "pages", "market"]) if (snd[k] && snd[k].stream) snd[k].stream.unlock();   // lets iPhones start them later
+    gate.classList.add("go"); $("#mute").classList.add("show");
+    document.body.classList.remove("locked"); scrollTo(0, 0); started = true; cur = 0; go(1);
+    setTimeout(() => { if (scrollY < 30) $("#hint").classList.add("show"); }, 7000);
+  };
+  gate.addEventListener("click", enter);
+  document.addEventListener("keydown", e => { if (!gate.classList.contains("go") && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); enter(); } });
+}
+
+/* ---------- controls ---------- */
+document.addEventListener("keydown", e => {
+  if (e.target.closest && e.target.closest("#mix")) { if (e.key === "Escape") toggleMixer(false); return; }
+  if (e.key === "m" || e.key === "M") toggleMixer(); else if (e.key === "Escape") toggleMixer(false);
+});
+$("#mute").addEventListener("click", e => { muted = !muted; applyMaster(); e.target.textContent = muted ? "Sound off" : "Sound on"; });
+
+/* ---------- mixer: press M ---------- */
+function buildMixer() {
+  const box = $("#mix");
+  const rows = ["master"].concat(Object.keys(SOUNDS)).map(k =>
+    `<div class="row"><label for="mx_${k}">${k === "master" ? "Master" : LABELS[k]}</label>
+     <input id="mx_${k}" type="range" min="-30" max="12" step="0.5" value="${trimDB[k] || 0}" data-k="${k}"><span class="db" id="db_${k}"></span></div>`).join("");
+  const name = s => s.gate ? "gate" : s.end ? "the end (black)" : s.video ? "film: " + s.video : [].concat(s.img)[0].replace(/^photos\//, "").replace(/\.jpg$/, "");
+  const opts = STEPS.map((s, i) => s.gate ? "" : `<option value="${i}">${i}. ${name(s)}</option>`).join("");
+  box.innerHTML = `<h2>Mix (press M to close)</h2>${rows}<hr>
+    <div class="row"><label for="mx_step">Jump to</label><select id="mx_step">${opts}</select><span></span></div>
+    <div class="bar"><button id="mx_copy" type="button">Copy mix</button><button id="mx_reset" type="button">Reset</button></div>
+    <small>Levels are in dB on top of your files. 0 = exactly as you made them. After the market, the apartment sounds stay gone even if you scroll back; reload the page to hear the first half again.</small>`;
+  box.querySelectorAll("input[type=range]").forEach(inp => {
+    const paint = () => $("#db_" + inp.dataset.k).textContent = (+inp.value > 0 ? "+" : "") + inp.value;
+    paint();
+    inp.addEventListener("input", () => {
+      const k = inp.dataset.k; trimDB[k] = +inp.value; paint();
+      if (k === "master") applyMaster(); else if (bus[k]) bus[k].trim.gain.setTargetAtTime(db2g(trimDB[k]), ctx.currentTime, 0.05);
+      try { localStorage.setItem("op_mix", JSON.stringify(trimDB)); } catch (e) {}
+    });
+  });
+  $("#mx_step").addEventListener("change", e => jumpTo(+e.target.value));
+  $("#mx_copy").addEventListener("click", async () => {
+    const out = JSON.stringify(trimDB); try { await navigator.clipboard.writeText(out); $("#mx_copy").textContent = "Copied"; } catch (e) { prompt("Copy this:", out); }
+    setTimeout(() => $("#mx_copy").textContent = "Copy mix", 1500);
+  });
+  $("#mx_reset").addEventListener("click", () => {
+    for (const k in trimDB) trimDB[k] = k === "master" ? 0 : SOUNDS[k].trim;
+    try { localStorage.removeItem("op_mix"); } catch (e) {}
+    box.querySelectorAll("input[type=range]").forEach(inp => { inp.value = trimDB[inp.dataset.k]; inp.dispatchEvent(new Event("input")); });
+  });
+  if (new URLSearchParams(location.search).has("mix")) toggleMixer(true);
+}
+function toggleMixer(force) { const b = $("#mix"); b.classList.toggle("open", force === undefined ? !b.classList.contains("open") : force); }
+function syncMixer() { const s = $("#mx_step"); if (s) s.value = cur; }
+
+/* ---------- test hook (harmless) ---------- */
+window.__op = {
+  step: () => cur,
+  go: i => jumpTo(i),
+  chapters: () => chaps.length,
+  levels: () => Object.fromEntries(Object.keys(SOUNDS).map(k => [k, +bus[k].level.gain.value.toFixed(4)])),
+  ducks: () => Object.fromEntries(Object.keys(SOUNDS).map(k => [k, +bus[k].duck.gain.value.toFixed(3)])),
+  targets: i => targets(i === undefined ? cur : i),
+  rms: () => { const a = new Float32Array(analyser.fftSize); analyser.getFloatTimeDomainData(a); let s = 0; for (const v of a) s += v * v; return 20 * Math.log10(Math.sqrt(s / a.length) + 1e-9); },
+  ctx: () => ctx && ctx.state
+};
+
+boot();
+</script>
+</body>
+</html>
